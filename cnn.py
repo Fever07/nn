@@ -1,37 +1,33 @@
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.layers import Conv2D, Conv3D, MaxPool2D, Dropout, Flatten, Dense
+from prepare_data import prepare_batch_data
+from tensorflow.keras.models import load_model
 
-
-data = keras.datasets.mnist.load_data()
-(train_img, train_val), (test_img, test_val) = data
-train_img = train_img / 255.0
-test_img = test_img / 255.0
+sess = tf.Session(config=tf.ConfigProto(log_device_placement=True))
 
 model = keras.Sequential()
-model.add(Conv2D(1, (3, 3), padding='same', activation='relu', input_shape=[28, 28, 1]))
-model.add(Conv2D(1, (3, 3), padding='same', activation='relu'))
-
+model.add(Conv2D(9, (3, 3), padding='same', activation='relu', input_shape=[256, 256, 3]))
+model.add(Conv2D(9, (3, 3), padding='same', activation='relu'))
+model.add(Conv2D(9, (3, 3), padding='same', activation='relu'))
+model.add(MaxPool2D())
+model.add(Conv2D(9, (3, 3), padding='same', activation='relu'))
+model.add(MaxPool2D())
 model.add(Flatten())
 model.add(Dense(196, activation='relu'))
-model.add(Dense(10, activation='softmax'))
+model.add(Dense(2, activation='softmax'))
 
-train_val = keras.utils.to_categorical(train_val)
-test_val = keras.utils.to_categorical(test_val)
-
-batch_size = 256
+batch_size = 32
 epochs = 2
 model.compile(optimizer='rmsprop', loss='categorical_crossentropy', metrics=['accuracy'])
 
-history = model.fit(train_img.reshape([60000, 28, 28, 1]), train_val, batch_size=batch_size, epochs=epochs, verbose=1,
-                     validation_data=(test_img.reshape([10000, 28, 28, 1]), test_val))
-import numpy
-with open('model_cnn.npz', 'wb') as file:
-    ar = []
-    for layer in model.layers:
-        wts = layer.get_weights()
-        ar.append(numpy.array(len(wts)))
-        for arr in wts:
-            ar.append(arr)
-    numpy.savez(file, *ar)
+for i in range(10):
+    trainx, testx, trainy, testy = prepare_batch_data()
+    model.fit(trainx, trainy, batch_size=batch_size, epochs=epochs, verbose=1,
+                         validation_data=(testx, testy))
+
+model.save('model_cnn.h5')
+print('Model has been saved')
+
+
 
