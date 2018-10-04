@@ -7,7 +7,7 @@ from tensorflow import keras
 image_path = 'E:\PROJECTS\images\Histology_CAMELYON16_300K_Tiles\Pink_Tiles\\'
 norm, tum = 'Normal', 'Tumor'
 curr_batch = 0
-batch = 1000
+batch = 500
 
 npath = os.path.join(image_path, norm)
 npaths = os.listdir(npath)
