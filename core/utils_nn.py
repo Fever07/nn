@@ -1,5 +1,5 @@
-from parse import parse
 import os
+from parse import parse
 from PIL import Image
 import numpy
 import pickle

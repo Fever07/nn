@@ -1,11 +1,12 @@
-from tensorflow.keras.models import load_model
-import tensorflow as tf
-from generator import Generator
-from utils_nn import parse_file, get_model_path, to_abs
 import os
-import numpy
 import sys
+import numpy
 import pickle
+import tensorflow as tf
+from tensorflow.keras.models import load_model
+
+from core.generator import Generator
+from core.utils_nn import parse_file, get_model_path, to_abs
 
 train_batch_size = 32
 test_batch_size = 25

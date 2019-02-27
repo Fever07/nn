@@ -1,10 +1,10 @@
 import os
+import sys
 import numpy
 from parse import parse
-import sys
-from matplotlib import pyplot as plt
 import pickle
-from utils_nn import parse_pred_file
+
+from core.utils_nn import parse_pred_file
 
 def read_attack_results(absp, test=True):
     if test:

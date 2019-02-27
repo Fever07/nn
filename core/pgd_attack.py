@@ -1,7 +1,6 @@
 import tensorflow as tf
 import numpy as np
 
-
 class PGD_attack:
     def __init__(self, model, 
                  batch_shape, 

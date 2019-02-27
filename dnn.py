@@ -1,12 +1,13 @@
-from tensorflow.keras.applications.inception_v3 import InceptionV3
-import tensorflow as tf
-from tensorflow.keras.models import load_model
-from tensorflow.keras.callbacks import ModelCheckpoint
-# from prepare_data import prepare_batch_data, set_iteration
-from generator import Generator
 import os
 import sys
-from utils_nn import to_abs
+import tensorflow as tf
+from tensorflow.keras.applications.inception_v3 import InceptionV3
+from tensorflow.keras.models import load_model
+from tensorflow.keras.callbacks import ModelCheckpoint
+
+from core.generator import Generator
+from core.utils_nn import to_abs
+
 
 input_shape = [256, 256, 3]
 n_classes = 4

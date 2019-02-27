@@ -1,21 +1,18 @@
-from pgd_attack import PGD_attack as pgd
+import os
+import sys
+from datetime import datetime
+import numpy
+from numpy.random import seed
+from PIL import Image
+import tensorflow as tf
 from tensorflow.keras.models import load_model
 from tensorflow.keras import backend as K
-import tensorflow as tf
-from PIL import Image
-import os
-import numpy
-from adversarial_examples.step_pgd_attack import step_pgd_attack as spa
-from adversarial_examples.box_constrained_attack import box_constrained_attack as bca
-
-from numpy.random import seed
 from tensorflow import set_random_seed
-from utils_nn import parse_file, load_gray_image, load_color_image, get_model_path
-from attack_generator import attack_generator, attack_iterative_generator
-from generator import ConfigurationGenerator, Generator
-import sys
-import json
-from datetime import datetime
+
+from core.utils_nn import parse_file, load_gray_image, load_color_image, get_model_path
+from core.attack_generator import attack_generator, attack_iterative_generator
+from core.generator import ConfigurationGenerator, Generator
+from core.pgd_attack import PGD_attack as pgd
 
 input_shape = [256, 256, 3]
 n_classes = 4
