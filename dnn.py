@@ -8,7 +8,6 @@ from tensorflow.keras.callbacks import ModelCheckpoint
 from core.generator import Generator
 from core.utils_nn import to_abs
 
-
 input_shape = [256, 256, 3]
 n_classes = 4
 batch_size = 32
