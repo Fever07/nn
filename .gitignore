@@ -7,3 +7,4 @@ plots/
 # ignored, contains datasets information
 prepare_datasets/
 examples.ipynb
+show_results.ipynb
