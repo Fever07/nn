@@ -9,14 +9,15 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras import backend as K
 from tensorflow import set_random_seed
 
-from core.utils_nn import parse_file, load_gray_image, load_color_image, get_model_path
+from core.utils_nn import parse_file, load_gray_image, load_color_image, get_model_path, to_abs
 from core.attack_generator import attack_generator, attack_iterative_generator
 from core.generator import ConfigurationGenerator, Generator
 from core.pgd_attack import PGD_attack as pgd
 
-input_shape = [256, 256, 3]
-n_classes = 4
+input_shape = [256, 256, 1]
+n_classes = 2
 batch_size = 32
+colored = False
 train_file = 'train.txt'
 test_file = 'test.txt'
 pred_train_file = 'pred_train.pkl'
@@ -42,7 +43,7 @@ def attack(absp):
         abs_testp,
         abs_pred_testp,
         batch_size=batch_size,
-        colored=images_are_colored
+        colored=colored
     )
 
     a_file_format = 'a_test_PGD_eps_{0:0.2}_max_iter_{{}}.pkl'
