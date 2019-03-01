@@ -2,7 +2,7 @@ import numpy
 from tensorflow import keras
 from PIL import Image
 
-from utils_nn import parse_file, parse_pred_file, load_gray_image, load_color_image
+from core.utils_nn import parse_file, parse_pred_file, load_gray_image, load_color_image
 
 class AbstractGenerator(keras.utils.Sequence):
     def __init__(self, path, colored, batch_size=32, shape=1):

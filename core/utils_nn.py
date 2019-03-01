@@ -67,7 +67,7 @@ def get_model_path(absp):
     return to_abs(absp, filename_model)
 
 def load_gray_image(path):
-    img = Image.open(path)
+    img = Image.open(path).resize([256, 256])
     arr = numpy.expand_dims(numpy.array(img), axis=2) / 255.0
     return arr
 

@@ -89,11 +89,11 @@ class PGD_attack:
             delta = delta + multiplier * lr * gradients[0]
             
             delta = np.clip(delta, lower_bounds, upper_bounds)
-            # lr = lr * self.lr_decay
+            lr = lr * self.lr_decay
 
         return images + delta
 
-    def generate_and_predict(self, sess, images, labels_or_targets, verbose=False):
+    def generate_for_each_iter(self, sess, images, labels_or_targets, verbose=False):
         """ Generates adversarial images/
             sess: the tensorflow session
             images: a 4D tensor containing the original images
@@ -122,22 +122,17 @@ class PGD_attack:
         lower_bounds = np.maximum(self.img_bounds[0] - images, -self.max_epsilon)
         upper_bounds = np.minimum(self.img_bounds[1] - images, self.max_epsilon)
         
-        res = []
+        a_imgs_for_iters = []
+        a_imgs = images + delta
         for i in range(self.max_iter):
-            logits, gradients  = sess.run([self.logits, self.grad], 
-                                 feed_dict={self.x_input:images + delta,
-                                            self.y_input:labels_or_targets})
+            gradients  = sess.run(self.grad, feed_dict={self.x_input:a_imgs,
+                                                        self.y_input:labels_or_targets})
             
             delta = delta + multiplier * lr * gradients[0]
             
             delta = np.clip(delta, lower_bounds, upper_bounds)
-            # lr = lr * self.lr_decay
 
-            # on i >= 1 logits are probabilites of adv_images, generated on (i - 1)-th iteration
-            if i >= 1:
-                res.append(logits)
-
-        # adv_images = images + delta
-        logits = sess.run(self.logits, feed_dict={self.x_input:images + delta})
-        res.append(logits)
-        return res
+            a_imgs = a_imgs + delta
+            a_imgs_for_iters.append(a_imgs)
+        
+        return a_imgs_for_iters

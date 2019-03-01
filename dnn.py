@@ -8,10 +8,11 @@ from tensorflow.keras.callbacks import ModelCheckpoint
 from core.generator import Generator
 from core.utils_nn import to_abs
 
-input_shape = [256, 256, 3]
-n_classes = 4
-batch_size = 32
-images_are_colored = True
+input_shape = [256, 256, 1]
+n_classes = 2
+train_batch_size = 25
+test_batch_size = 25
+images_are_colored = False
 train_file = 'train.txt'
 test_file = 'test.txt'
 
@@ -34,11 +35,11 @@ def init_and_train_model(absp):
     abs_testp = to_abs(absp, test_file)
     train_generator = Generator(path=to_abs(absp, train_file),
                                 colored=images_are_colored,
-                                batch_size=batch_size,
+                                batch_size=train_batch_size,
                                 num_classes=n_classes)
     test_generator = Generator(path=to_abs(absp, test_file),
                                colored=images_are_colored,
-                               batch_size=batch_size,
+                               batch_size=test_batch_size,
                                num_classes=n_classes)
 
     # Train model
@@ -62,4 +63,4 @@ if __name__ == '__main__':
     path_to_folder = sys.argv[1]
 
     os.environ['CUDA_VISIBLE_DEVICES'] = '0'
-    init_and_train_model(path_to_folder, use_one_gpu)
+    init_and_train_model(path_to_folder)
