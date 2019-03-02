@@ -4,7 +4,7 @@ import numpy
 from parse import parse
 import pickle
 
-from core.utils_nn import parse_pred_file
+from core.utils_nn import parse_pred_file, parse_file, to_abs
 
 def read_attack_results(absp, test=True):
     if test:
@@ -37,12 +37,11 @@ def read_pred_results(absp, test=True):
         filename = 'pred_test.pkl'
     else:
         filename = 'pred_train.pkl'
-    abs_filename = os.path.join(absp, filename)
+    abs_filename = to_abs(absp, filename)
     return parse_pred_file(abs_filename)
 
 def rate_attacked(absp):
     def get_attacked_rate(a_probs):
-        labels = numpy.argmax(probs, axis=1)
         a_labels = numpy.argmax(a_probs, axis=1)
         attacked = len(numpy.where((labels == a_labels) == False)[0])
         total = len(labels)
@@ -50,6 +49,7 @@ def rate_attacked(absp):
 
     iter_space, eps_space, a_probs = read_attack_results(absp, test=True)
     probs = read_pred_results(absp, test=True)
+    paths, labels = parse_file(to_abs(absp, 'test.txt'))
 
     # build a dependence of number of attacked images
     # on epsilon
