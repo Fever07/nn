@@ -12,10 +12,11 @@ from tensorflow import set_random_seed
 from core.utils_nn import parse_file, load_gray_image, load_color_image, get_model_path, to_abs
 from core.generator import ConfigurationGenerator, Generator
 from core.pgd_attack import PGD_attack as pgd
+import pickle
 
 input_shape = [256, 256, 1]
 n_classes = 2
-batch_size = 32
+batch_size = 50
 colored = False
 train_file = 'train.txt'
 test_file = 'test.txt'
@@ -79,19 +80,16 @@ def attack(absp):
             ))
 
             # Attack "imgs": do "max_iter" iterations, and receive
-            # generated images for each iteration
-            a_imgs_for_iters = pgd_attacker.generate_for_each_iter(sess, imgs, labels, verbose=False)
-
-            a_imgs_for_iters = numpy.array(a_imgs_for_iters).reshape([max_iter * batch_size, *input_shape])
-            a_probs_for_iters = model.predict(a_imgs_for_iters, batch_size=batch_size)
-            a_probs_for_iters = numpy.array(a_probs_for_iters).reshape([max_iter, batch_size, n_classes])
+            # generated images and probs for each iteration
+            a_imgs_for_iters, a_probs_for_iters = pgd_attacker.generate_imgs_and_probs(sess, imgs, labels)
+            a_probs_for_iters = numpy.array(a_probs_for_iters)
 
             a_probs = numpy.append(a_probs, a_probs_for_iters, axis=1)
 
         # Save probs to file for each iteration
         iters = numpy.arange(1, max_iter + 1)
         for it, a_probs_for_iter in zip(iters, a_probs):
-            filepath = a_file_format.format(max_eps, it)
+            filepath = abs_a_file_format.format(max_eps, it)
             file = open(filepath, 'wb')
             pickle.dump(a_probs_for_iter, file)
             file.close()
