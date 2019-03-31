@@ -15,8 +15,8 @@ from core.pgd_attack import PGD_attack as pgd
 import pickle
 
 input_shape = [256, 256, 1]
-n_classes = 2
-batch_size = 50
+n_classes = 3
+batch_size = 32
 colored = False
 train_file = 'train.txt'
 test_file = 'test.txt'
@@ -34,6 +34,7 @@ def attack(absp):
     abs_pred_trainp = to_abs(absp, pred_train_file)
     abs_pred_testp = to_abs(absp, pred_test_file)
 
+    K.clear_session()
     model_path = get_model_path(absp)
     model = load_model(model_path)
 
@@ -50,8 +51,9 @@ def attack(absp):
     abs_a_file_format = to_abs(absp, a_file_format)
 
     max_iter=20
-
-    for max_eps in numpy.arange(0.02, 0.22, 0.02):
+    eps_space = numpy.arange(0.02, 0.22, 0.02)
+    # for max_eps in numpy.arange(0.02, 0.22, 0.02):
+    for max_eps in eps_space:
         pgd_attacker = pgd(model,
                            batch_shape=[None]+input_shape,
                            max_epsilon=max_eps,
@@ -74,8 +76,8 @@ def attack(absp):
             imgs, probs, labels = generator[i]
 
             print('Processing {0}/{1} images - {2}'.format(
-                (i + 1) * batch_size,
-                len(generator) * batch_size,
+                i * batch_size + len(imgs),
+                generator.total,
                 datetime.now().time().strftime('%H:%M:%S')
             ))
 
@@ -102,5 +104,11 @@ if __name__ == '__main__':
         
     path_to_folder = sys.argv[1]
 
-    os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+    os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+    # d_f = '../__histology_camelyon_{}'
+    # ns = [500, 1000, 2000, 5000]
+    # paths = list(map(d_f.format, ns))
     attack(path_to_folder)
+    # for p in paths:
+    #     print(p)
+    #     attack(p)

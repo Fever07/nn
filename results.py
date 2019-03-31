@@ -4,7 +4,7 @@ import numpy
 from parse import parse
 import pickle
 
-from core.utils_nn import parse_pred_file, parse_file, to_abs
+from core.utils_nn import parse_pred_file, parse_file, parse_attack_files, to_abs
 
 def read_attack_results(absp, test=True):
     if test:
@@ -12,24 +12,11 @@ def read_attack_results(absp, test=True):
     else:
         f = 'a_train_PGD_eps_{0:0.2}_max_iter_{1}.pkl'
 
+    abs_f = to_abs(absp, f)
     iter_space = numpy.arange(1, 21)
     eps_space = numpy.arange(0.02, 0.22, 0.02)
 
-    values = []
-    for max_iter in iter_space:
-        for max_eps in eps_space:
-            filename = f.format(max_eps, max_iter)
-            abs_filename = os.path.join(absp, filename)
-            file = open(abs_filename, 'rb')
-            a_probs = pickle.load(file)
-            file.close()
-
-            values.append(a_probs)
-
-    values = numpy.array(values)
-    shape = values.shape
-    values = values.reshape(len(iter_space), len(eps_space), *shape[1: ])
-    print(values.shape, values.dtype)
+    values = parse_attack_files(abs_f, iter_space, eps_space)
     return iter_space, eps_space, values
 
 def read_pred_results(absp, test=True):
@@ -40,27 +27,41 @@ def read_pred_results(absp, test=True):
     abs_filename = to_abs(absp, filename)
     return parse_pred_file(abs_filename)
 
-def rate_attacked(absp):
+def read_orig_file(absp, test=True):
+    if test:
+        filename = 'test.txt'
+    else:
+        filename = 'train.txt'
+    abs_filename = to_abs(absp, filename)
+    return parse_file(abs_filename)
+
+def rate_attacked(absp, test=True):
     def get_attacked_rate(a_probs):
         a_labels = numpy.argmax(a_probs, axis=1)
         attacked = len(numpy.where((labels == a_labels) == False)[0])
         total = len(labels)
         return attacked / total
 
-    iter_space, eps_space, a_probs = read_attack_results(absp, test=True)
-    probs = read_pred_results(absp, test=True)
-    paths, labels = parse_file(to_abs(absp, 'test.txt'))
+    iter_space, eps_space, a_probs = read_attack_results(absp, test=test)
+    probs = read_pred_results(absp, test=test)
+    paths, labels = read_orig_file(absp, test=test)
+
+    labels_pred = numpy.argmax(probs, axis=1)
+    correct_inds = numpy.where((labels == labels_pred) == True)[0]
+    labels = numpy.array(labels)[correct_inds]
+    probs = probs[correct_inds]
 
     # build a dependence of number of attacked images
     # on epsilon
     xs = numpy.repeat([eps_space], len(iter_space), axis=0)
     ys = []
     for a_iter_probs in a_probs:
+        a_iter_probs = a_iter_probs[:, correct_inds]      
         dependence_on_eps = list(map(get_attacked_rate, a_iter_probs))
         ys.append(dependence_on_eps)
     pts = list(zip(xs, ys))
 
-    path = os.path.join(absp, 'test_attacked_rate.pkl')
+    path = to_abs(absp, 'test_attacked_rate.pkl')
     file = open(path, 'wb')
     pickle.dump(pts, file)
     file.close()
@@ -68,18 +69,26 @@ def rate_attacked(absp):
     return pts
 
 
-def attacked_by_bins(absp):
+def attacked_by_bins(absp, test=True):
     bins = numpy.arange(0.5, 1.05, 0.05)
-    iter_space, eps_space, a_probs = read_attack_results(absp, test=True)
-    probs = read_pred_results(absp, test=True)
+    iter_space, eps_space, a_probs = read_attack_results(absp, test=test)
+    probs = read_pred_results(absp, test=test)
+    paths, labels = read_orig_file(absp, test=test)
+
+    labels_pred = numpy.argmax(probs, axis=1)
+    correct_inds = numpy.where((labels == labels_pred) == True)[0]
+    probs = probs[correct_inds]
+    labels = numpy.array(labels)[correct_inds]
+
     results = []
     for i, it in enumerate(iter_space):
         by_eps_results = []
         for j, eps in enumerate(eps_space):
             adv_probs = a_probs[i][j]
-            orig_labels = numpy.argmax(probs, axis=1)
+            adv_probs = adv_probs[correct_inds]
+
             adv_labels = numpy.argmax(adv_probs, axis=1)
-            attacked_inds = numpy.where((orig_labels == adv_labels) == False)[0]
+            attacked_inds = numpy.where((labels == adv_labels) == False)[0]
             attacked_total = len(attacked_inds)
             orig_class_probs = numpy.max(probs, axis=1)
 

@@ -1,7 +1,7 @@
 import os
 import sys
 from sklearn.metrics import roc_curve, auc
-from utils_nn import parse_file
+from core.utils_nn import parse_file, parse_pred_file
 from matplotlib import pyplot as plt
 import numpy
 
@@ -9,23 +9,35 @@ def save_roc_curve():
     datasets = [
         {
             'absp': '../__histology',
-            'label': 'Гистология'
+            'label': 'H-Mt'
         },
         {
             'absp': '../__aorta_razv',
-            'label': 'Аорта'
+            'label': 'X-Ao'
         },
         {
             'absp': '../__xray',
-            'label': 'Рентген Легких'
-        }
+            'label': 'X-Lung'
+        },
+        {
+            'absp': '../__histology_tifs_2classes_ovary',
+            'label': 'H-Ov'
+        },
+        {
+            'absp': '../__histology_tifs_2classes_thyroid',
+            'label': 'H-Th'
+        },
+        # {
+        #     'absp': '../__histology_tifs_4classes',
+        #     'label': 'H-Ov-Th'
+        # },
     ]
 
     def get_fpr_tpr_auc(dataset):
         abs_testp = os.path.join(dataset['absp'], 'test.txt')
-        abs_pred_testp = os.path.join(dataset['absp'], 'pred_test.txt')
+        abs_pred_testp = os.path.join(dataset['absp'], 'pred_test.pkl')
         paths, labels = parse_file(abs_testp)
-        paths, probs = parse_file(abs_pred_testp, file_type='pred')
+        probs = parse_pred_file(abs_pred_testp)
         probs = numpy.array(probs)
 
         fpr, tpr, thr = roc_curve(numpy.array(labels), probs.T[1]) 
@@ -46,11 +58,11 @@ def save_roc_curve():
     for i, ds in enumerate(datasets):
         plt.plot(fprs[i], tprs[i], '-', label=ds['label'] + ', AUC = {0:0.3}'.format(aucs[i]))
     plt.plot([0, 1], [0, 1], '--', color='black')
-    plt.xlabel('Ложно-положительная доля')
-    plt.ylabel('Истинно-положительная доля')
+    plt.xlabel('FPR')
+    plt.ylabel('TPR')
     plt.legend()
-    plt.savefig(os.path.join('../', 'roc_curve.png'))
-    plt.show()    
+    plt.savefig(os.path.join('plots', 'roc_curve.png'))
+    # plt.show()    
 
 if __name__ == '__main__':
     save_roc_curve()

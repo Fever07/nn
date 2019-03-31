@@ -9,9 +9,9 @@ from core.generator import Generator
 from core.utils_nn import parse_file, get_model_path, to_abs
 
 train_batch_size = 32
-test_batch_size = 25
-images_are_colored = True
-n_classes = 4
+test_batch_size = 32
+images_are_colored = False
+n_classes = 3
 train_file = 'train.txt'
 test_file = 'test.txt'
 pred_train_file = 'pred_train.pkl'
@@ -20,8 +20,8 @@ pred_test_file = 'pred_test.pkl'
 def predict(absp):
     abs_trainp = to_abs(absp, train_file)
     abs_testp = to_abs(absp, test_file)
-    abs_pred_trainp = to_abs(absp, pred_trainp)
-    abs_pred_testp = to_abs(absp, pred_testp)
+    abs_pred_trainp = to_abs(absp, pred_train_file)
+    abs_pred_testp = to_abs(absp, pred_test_file)
     
     train_paths, train_labels = parse_file(abs_trainp)
     test_paths, test_labels = parse_file(abs_testp)
@@ -72,13 +72,13 @@ def predict(absp):
     pred_labels = numpy.argmax(test_probs, axis=1)
     true_labels = numpy.array(test_labels)[:len(pred_labels)]
     l = numpy.sum((pred_labels - true_labels) != 0)
-    real_acc = 1 - l  / len(labels)
+    real_acc = 1 - l  / len(true_labels)
     print(real_acc)
 
     # Save predicted probs
     print(abs_pred_testp)
     file = open(abs_pred_testp, 'wb')
-    pickle.dump(probs, file)
+    pickle.dump(test_probs, file)
     print('Prediction of test dataset finished')
 
 if __name__ == '__main__':
@@ -89,4 +89,4 @@ if __name__ == '__main__':
     path_to_folder = sys.argv[1]
 
     os.environ['CUDA_VISIBLE_DEVICES'] = '0'
-    predict(path_to_folder, use_one_gpu)
+    predict(path_to_folder)

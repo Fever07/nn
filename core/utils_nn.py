@@ -24,17 +24,11 @@ def parse_pred_file(filepath):
     file.close()
     return probs
 
-def parse_attack_files(absp, iter_space, eps_space, test=True):
-    if test:
-        f = 'a_test_PGD_eps_{0:0.2}_max_iter_{1}.pkl'
-    else:
-        f = 'a_train_PGD_eps_{0:0.2}_max_iter_{1}.pkl'
-
+def parse_attack_files(abs_f, iter_space, eps_space):
     a_probs = []
     for max_iter in iter_space:
         for max_eps in eps_space:
-            filename = f.format(max_eps, max_iter)
-            filepath = os.path.join(absp, filename)
+            filepath = abs_f.format(max_eps, max_iter)
             file = open(filepath, 'rb')
             a_iter_eps_probs = pickle.load(file)
             file.close()

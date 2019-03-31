@@ -9,21 +9,22 @@ from core.generator import Generator
 from core.utils_nn import to_abs
 
 input_shape = [256, 256, 1]
-n_classes = 2
-train_batch_size = 25
-test_batch_size = 25
+n_classes = 3
+train_batch_size = 32
+test_batch_size = 32
 images_are_colored = False
 train_file = 'train.txt'
 test_file = 'test.txt'
 
 def init_and_train_model(absp):
-    # Init and compile model
-    model = InceptionV3(include_top=True,
-                        weights=None,
-                        input_shape=input_shape,
-                        classes=n_classes)
+    # # Init and compile model
+    # model = InceptionV3(include_top=True,
+    #                     weights=None,
+    #                     input_shape=input_shape,
+    #                     classes=n_classes)
 
-    model.compile(optimizer=tf.train.AdamOptimizer(0.001),
+    model = load_model(os.path.join(absp, 'model_01_0.74.h5'))
+    model.compile(optimizer=tf.train.AdamOptimizer(0.00001),
                   loss='categorical_crossentropy',
                   metrics=['accuracy'])
 
@@ -52,7 +53,7 @@ def init_and_train_model(absp):
                         verbose=1,
                         validation_data=test_generator,
                         use_multiprocessing=True,
-                        workers=8,
+                        workers=4,
                         callbacks=callbacks)
 
 if __name__ == '__main__':
@@ -62,5 +63,5 @@ if __name__ == '__main__':
         
     path_to_folder = sys.argv[1]
 
-    os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+    os.environ['CUDA_VISIBLE_DEVICES'] = '1'
     init_and_train_model(path_to_folder)
