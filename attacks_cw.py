@@ -1,7 +1,7 @@
 import os
 import sys
 from datetime import datetime
-import numpy
+import numpy as np
 from numpy.random import seed
 from PIL import Image
 import tensorflow as tf
@@ -31,11 +31,21 @@ test_file = 'test.txt'
 pred_train_file = 'pred_train.pkl'
 pred_test_file = 'pred_test.pkl'
 
+def calc_l2norm(v):
+    n = np.linalg.norm(v, axis=1)
+    n = np.linalg.norm(n, axis=1)
+    n = np.linalg.norm(n, axis=1)
+    return n
+
+def calc_linfnorm(v):
+    n = np.max(np.abs(v), axis=(1, 2, 3))
+    return n
+
 def attack(absp):
 
     seed(1337)
     set_random_seed(1337)
-    rng = numpy.random.RandomState(1337)
+    rng = np.random.RandomState(1337)
 
     abs_trainp = os.path.join(absp, train_file)
     abs_testp = os.path.join(absp, test_file)
@@ -56,48 +66,71 @@ def attack(absp):
     generator = Generator(
         abs_testp,
         batch_size=batch_size,
-        colored=colored,
-        total=batch_size * 5
+        colored=colored
     )
 
-    a_file_format = 'a_test_CW_eps_{0:0.2}_max_iter_{1}.pkl'
+    a_file_format = 'a_test_CW_probs_conf_{0}_lr_{1}_c_{2}_max_iter_{3}.pkl'
     abs_a_file_format = os.path.join(absp, model_name, a_file_format)
+    a_file_l2norm_format = 'a_test_CW_l2norms_conf_{0}_lr_{1}_c_{2}_max_iter_{3}.pkl'
+    abs_a_file_l2norm_format = os.path.join(absp, model_name, a_file_l2norm_format)
+    a_file_linfnorm_format = 'a_test_CW_linfnorms_conf_{0}_lr_{1}_c_{2}_max_iter_{3}.pkl'
+    abs_a_file_linfnorm_format = os.path.join(absp, model_name, a_file_linfnorm_format)
 
-    max_iter=200
     print('Attacking of %s' % model_name)
+
+    confidence = 0
+    lr = 0.01
+    c = 1
+    max_iter = 500
     wrapped_model = clm.CallableModelWrapper(model, 'logits')
     cw_attacker = attacks_tf.CarliniWagnerL2(sess=sess, 
                                             model=wrapped_model,
                                             batch_size=batch_size,
-                                            confidence=0,
+                                            confidence=confidence,
                                             targeted=False,
-                                            learning_rate=0.01,
+                                            learning_rate=lr,
                                             binary_search_steps=5,
                                             max_iterations=max_iter,
                                             abort_early=True,
-                                            initial_const=1,
+                                            initial_const=c,
                                             clip_min=0,
                                             clip_max=1,
                                             num_labels=n_classes,
                                             shape=input_shape)
     
-    # a_probs = numpy.empty(shape=[max_iter, 0, n_classes], dtype=numpy.float32)
+    a_probs = np.zeros(shape=[generator.total, n_classes], dtype=np.float32)
+    diff_l2norms = np.zeros(shape=[generator.total], dtype=np.float32)
+    diff_linfnorms = np.zeros(shape=[generator.total], dtype=np.float32)
     for i in tqdm(range(len(generator))):
         imgs, categorical_labels = generator[i]
 
         a_imgs = cw_attacker.attack_batch(imgs, categorical_labels)
-        probs = model.predict(imgs)
-        a_probs = model.predict(a_imgs)
-        print(probs, a_probs)
+        diff_l2norms_batch = calc_l2norm(imgs - a_imgs)
+        diff_l2norms[i * batch_size: (i + 1) * batch_size] = diff_l2norms_batch
 
-    # Save probs to file for each iteration
-    # iters = numpy.arange(1, max_iter + 1)
-    # for it, a_probs_for_iter in zip(iters, a_probs):
-    #     filepath = abs_a_file_format.format(max_eps, it)
-    #     file = open(filepath, 'wb')
-    #     pickle.dump(a_probs_for_iter, file)
-    #     file.close()
-            
+        diff_linfnorms_batch = calc_linfnorm(imgs - a_imgs)
+        diff_linfnorms[i * batch_size: (i + 1) * batch_size] = diff_linfnorms_batch
+
+        a_probs_batch = model.predict(a_imgs)
+        a_probs[i * batch_size: (i + 1) * batch_size] = a_probs_batch
+
+        probs = model.predict(imgs)
+
+    fpath = abs_a_file_format.format(confidence, lr, c, max_iter)
+    file = open(fpath, 'wb')
+    pickle.dump(a_probs, file)
+    file.close()
+
+    fpath = abs_a_file_l2norm_format.format(confidence, lr, c, max_iter)
+    file = open(fpath, 'wb')
+    pickle.dump(diff_l2norms, file)
+    file.close()
+    
+    fpath = abs_a_file_linfnorm_format.format(confidence, lr, c, max_iter)
+    file = open(fpath, 'wb')
+    pickle.dump(diff_linfnorms, file)
+    file.close()
+    
 
 if __name__ == '__main__':
     os.environ['CUDA_VISIBLE_DEVICES'] = '0'
