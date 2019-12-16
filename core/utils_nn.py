@@ -55,10 +55,10 @@ def compose_file(filepath, paths, probs):
     file.writelines(lines)
     file.close()
 
-def get_model_path(absp):
-    ldir = os.listdir(absp)
+def get_model_path(absp, model_name='inceptionv3'):
+    ldir = os.listdir(os.path.join(absp, model_name))
     filename_model = [p for p in ldir if p.endswith('.h5')][0]
-    return to_abs(absp, filename_model)
+    return os.path.join(absp, model_name, filename_model)
 
 def load_gray_image(path):
     img = Image.open(path).resize([256, 256])
@@ -66,9 +66,13 @@ def load_gray_image(path):
     return arr
 
 def load_color_image(path):
-    img = Image.open(path)
+    img = Image.open(path).resize([256, 256])
     arr = numpy.array(img)[:, :, :3] / 255.0
     return arr
 
-def to_abs(absp, path):
-    return os.path.join(absp, path)
+def get_folder_name(absp):
+    if absp.endswith('/'):
+        folder_name = absp.split('/')[-2]
+    else:
+        folder_name = absp.split('/')[-1]
+    return folder_name
