@@ -4,7 +4,7 @@ import numpy
 from parse import parse
 import pickle
 
-from core.utils_nn import parse_pred_file, parse_file, parse_attack_files, to_abs
+from core.utils_nn import parse_pred_file, parse_file, parse_attack_files
 
 def read_attack_results(absp, test=True):
     if test:
@@ -12,7 +12,7 @@ def read_attack_results(absp, test=True):
     else:
         f = 'a_train_PGD_eps_{0:0.2}_max_iter_{1}.pkl'
 
-    abs_f = to_abs(absp, f)
+    abs_f = os.path.join(absp, f)
     iter_space = numpy.arange(1, 21)
     eps_space = numpy.arange(0.02, 0.22, 0.02)
 
@@ -24,7 +24,7 @@ def read_pred_results(absp, test=True):
         filename = 'pred_test.pkl'
     else:
         filename = 'pred_train.pkl'
-    abs_filename = to_abs(absp, filename)
+    abs_filename = os.path.join(absp, filename)
     return parse_pred_file(abs_filename)
 
 def read_orig_file(absp, test=True):
@@ -32,47 +32,48 @@ def read_orig_file(absp, test=True):
         filename = 'test.txt'
     else:
         filename = 'train.txt'
-    abs_filename = to_abs(absp, filename)
+    abs_filename = os.path.join(absp, filename)
     return parse_file(abs_filename)
 
-def rate_attacked(absp, test=True):
+def rate_attacked(absp, model_name='inceptionv3', test=True):
     def get_attacked_rate(a_probs):
         a_labels = numpy.argmax(a_probs, axis=1)
         attacked = len(numpy.where((labels == a_labels) == False)[0])
         total = len(labels)
         return attacked / total
 
-    iter_space, eps_space, a_probs = read_attack_results(absp, test=test)
-    probs = read_pred_results(absp, test=test)
+    iter_space, eps_space, a_probs = read_attack_results(os.path.join(absp, model_name), test=test)
+    probs = read_pred_results(os.path.join(absp, model_name), test=test)
     paths, labels = read_orig_file(absp, test=test)
 
-    labels_pred = numpy.argmax(probs, axis=1)
-    correct_inds = numpy.where((labels == labels_pred) == True)[0]
-    labels = numpy.array(labels)[correct_inds]
-    probs = probs[correct_inds]
+    # labels_pred = numpy.argmax(probs, axis=1)
+    # correct_inds = numpy.where((labels == labels_pred) == True)[0]
+    # labels = numpy.array(labels)[correct_inds]
+    # probs = probs[correct_inds]
+
+    labels = numpy.array(labels)
 
     # build a dependence of number of attacked images
     # on epsilon
     xs = numpy.repeat([eps_space], len(iter_space), axis=0)
     ys = []
     for a_iter_probs in a_probs:
-        a_iter_probs = a_iter_probs[:, correct_inds]      
+        # a_iter_probs = a_iter_probs[:, correct_inds]      
         dependence_on_eps = list(map(get_attacked_rate, a_iter_probs))
         ys.append(dependence_on_eps)
     pts = list(zip(xs, ys))
 
-    path = to_abs(absp, 'test_attacked_rate.pkl')
+    path = os.path.join(absp, model_name, 'test_attacked_rate.pkl')
     file = open(path, 'wb')
     pickle.dump(pts, file)
     file.close()
 
     return pts
 
-
-def attacked_by_bins(absp, test=True):
+def attacked_by_bins(absp, model_name='inceptionv3', test=True):
     bins = numpy.arange(0.5, 1.05, 0.05)
-    iter_space, eps_space, a_probs = read_attack_results(absp, test=test)
-    probs = read_pred_results(absp, test=test)
+    iter_space, eps_space, a_probs = read_attack_results(os.path.join(absp, model_name), test=test)
+    probs = read_pred_results(os.path.join(absp, model_name), test=test)
     paths, labels = read_orig_file(absp, test=test)
 
     labels_pred = numpy.argmax(probs, axis=1)
@@ -89,14 +90,13 @@ def attacked_by_bins(absp, test=True):
 
             adv_labels = numpy.argmax(adv_probs, axis=1)
             attacked_inds = numpy.where((labels == adv_labels) == False)[0]
-            attacked_total = len(attacked_inds)
             orig_class_probs = numpy.max(probs, axis=1)
 
             orig_bin_probs = numpy.digitize(orig_class_probs, bins)
             attacked_bin_probs = orig_bin_probs[attacked_inds]
             bin_inds = numpy.arange(0, len(bins)) + 1
 
-            orig_in_bins = numpy.histogram(orig_bin_probs, bins=bin_inds)[0]
+            orig_in_bins = numpy.histogram (orig_bin_probs, bins=bin_inds)[0]
             attacked_in_bins = numpy.histogram(attacked_bin_probs, bins=bin_inds)[0]
             rate_in_bins = numpy.divide(attacked_in_bins, orig_in_bins)
             # replace nans by zero
@@ -107,7 +107,7 @@ def attacked_by_bins(absp, test=True):
 
         results.append(by_eps_results)
 
-    file = open(os.path.join(absp, 'test_attacked_by_bins.pkl'), 'wb')
+    file = open(os.path.join(absp, model_name, 'test_attacked_by_bins.pkl'), 'wb')
     pickle.dump(results, file)
     file.close()   
 

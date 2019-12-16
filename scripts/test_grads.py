@@ -2,7 +2,7 @@ import tensorflow as tf
 from tensorflow.keras.models import load_model
 import numpy
 import os
-from utils_nn import get_model_path_acc, to_abs
+from utils_nn import get_model_path_acc
 
 from generator import ConfigurationGenerator
 
@@ -26,10 +26,10 @@ pred_trainp = 'pred_train.txt'
 pred_testp = 'pred_test.txt'
 examples_folder = 'examples/'
 
-abs_trainp = to_abs(absp, trainp)
-abs_testp = to_abs(absp, testp)
-abs_pred_trainp = to_abs(absp, pred_trainp)
-abs_pred_testp = to_abs(absp, pred_testp)
+abs_trainp = os.path.join(absp, trainp)
+abs_testp = os.path.join(absp, testp)
+abs_pred_trainp = os.path.join(absp, pred_trainp)
+abs_pred_testp = os.path.join(absp, pred_testp)
 
 test_gen = ConfigurationGenerator(
     abs_testp, 
