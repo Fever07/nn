@@ -52,7 +52,7 @@ class PGD_attack:
 
         self.model = model
 
-    def generate(self, sess, images, labels_or_targets, verbose=False):
+    def generate(self, sess, images, labels_or_targets):
         """ Generates adversarial images/
             sess: the tensorflow session
             images: a 4D tensor containing the original images
@@ -87,9 +87,7 @@ class PGD_attack:
                                             self.y_input:labels_or_targets})
             
             delta = delta + multiplier * lr * gradients[0]
-            
             delta = np.clip(delta, lower_bounds, upper_bounds)
-            lr = lr * self.lr_decay
 
         return images + delta
 
