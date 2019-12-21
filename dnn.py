@@ -24,10 +24,10 @@ models = {
 }
 
 model_name = 'mobilenet'
-input_shape = [256, 256, 3]
-n_classes = 2
-train_batch_size = 8
-test_batch_size = 8
+input_shape = [256, 256, 1]
+n_classes = 3
+train_batch_size = 16
+test_batch_size = 16
 images_are_colored = input_shape[-1] == 3
 train_file = 'train.txt'
 test_file = 'test.txt'
@@ -80,7 +80,7 @@ def init_and_train_model(absp):
                         callbacks=callbacks)
 
 if __name__ == '__main__':
-    os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+    # os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 
     if len(sys.argv) == 1:
         print('Please provide path to folder')

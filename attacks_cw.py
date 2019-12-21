@@ -21,10 +21,10 @@ from tqdm import tqdm
 from cleverhans import attacks_tf
 from cleverhans import model as  clm
 
-model_name = 'inceptionv3'
+model_name = 'xception'
 input_shape = [256, 256, 1]
-n_classes = 2
-batch_size = 20
+n_classes = 3
+batch_size = 16
 colored = input_shape[-1] == 3
 train_file = 'train.txt'
 test_file = 'test.txt'
@@ -66,7 +66,8 @@ def attack(absp):
     generator = Generator(
         abs_testp,
         batch_size=batch_size,
-        colored=colored
+        colored=colored,
+	num_classes=n_classes
     )
 
     a_file_format = 'a_test_CW_probs_conf_{0}_lr_{1}_c_{2}_max_iter_{3}.pkl'
@@ -81,7 +82,7 @@ def attack(absp):
     confidence = 0
     lr = 0.01
     c = 1
-    max_iter = 500
+    max_iter = 50
     wrapped_model = clm.CallableModelWrapper(model, 'logits')
     cw_attacker = attacks_tf.CarliniWagnerL2(sess=sess, 
                                             model=wrapped_model,
@@ -133,11 +134,13 @@ def attack(absp):
     
 
 if __name__ == '__main__':
-    os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+    # os.environ['CUDA_VISIBLE_DEVICES'] = '0'
     if len(sys.argv) == 1:
         print('Please provide path to folder')
         exit()
         
     path_to_folder = sys.argv[1]
+    model_name = sys.argv[2]
+    print(path_to_folder, model_name)
     attack(path_to_folder)
 
