@@ -67,7 +67,7 @@ def attack(absp):
         abs_testp,
         batch_size=batch_size,
         colored=colored,
-	num_classes=n_classes
+        num_classes=n_classes
     )
 
     a_file_format = 'a_test_CW_probs_conf_{0}_lr_{1}_c_{2}_max_iter_{3}.pkl'
@@ -114,8 +114,6 @@ def attack(absp):
 
         a_probs_batch = model.predict(a_imgs)
         a_probs[i * batch_size: (i + 1) * batch_size] = a_probs_batch
-
-        probs = model.predict(imgs)
 
     fpath = abs_a_file_format.format(confidence, lr, c, max_iter)
     file = open(fpath, 'wb')
