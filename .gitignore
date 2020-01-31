@@ -3,6 +3,7 @@
 __pycache__/
 .ipynb_checkpoints/
 plots/
+.vscode/
 
 # ignored, contains datasets information
 prepare_datasets/

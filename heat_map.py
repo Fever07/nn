@@ -10,7 +10,7 @@ from tensorflow.keras import backend as K
 from tensorflow import set_random_seed
 from tensorflow.keras.models import Model
 
-from core.utils_nn import parse_file, load_gray_image, load_color_image, get_model_path, get_folder_name
+from core.utils import parse_file, load_gray_image, load_color_image, get_model_path, get_folder_name
 from core.generator import ConfigurationGenerator, Generator, AttacksGenerator
 from core.pgd_attack import PGD_attack as pgd
 import pickle

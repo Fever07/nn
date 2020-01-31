@@ -4,7 +4,7 @@ import numpy
 from parse import parse
 import pickle
 
-from core.utils_nn import parse_pred_file, parse_file, parse_attack_files
+from core.utils import parse_pred_file, parse_file, parse_attack_files
 
 def read_attack_results(absp, test=True):
     if test:

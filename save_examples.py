@@ -6,7 +6,7 @@ from tensorflow.keras.models import load_model, Model
 from tensorflow.keras import backend as K
 
 from core.generator import ConfigurationGenerator
-from core.utils_nn import parse_attack_files, \
+from core.utils import parse_attack_files, \
 parse_file, parse_pred_file, get_model_path, load_gray_image, load_color_image
 from core.pgd_attack import PGD_attack as pgd
 

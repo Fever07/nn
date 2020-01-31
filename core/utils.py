@@ -14,9 +14,9 @@ def parse_file(filepath):
     file = open(filepath, 'r')
     lines = file.readlines()
     parsed = [parse_orig_line(line) for line in lines]
-    paths_labels = list(zip(*parsed))
+    paths, labels = list(zip(*parsed))
     file.close()
-    return paths_labels
+    return paths, labels
 
 def parse_pred_file(filepath):
     file = open(filepath, 'rb')

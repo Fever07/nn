@@ -11,7 +11,7 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.utils import CustomObjectScope
 from functools import partial
 
-from core.utils_nn import parse_file, load_gray_image, load_color_image, get_model_path, get_folder_name
+from core.utils import parse_file, load_gray_image, load_color_image, get_model_path, get_folder_name
 from core.generator import ConfigurationGenerator, Generator, AttacksGenerator
 import pickle
 

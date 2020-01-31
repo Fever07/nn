@@ -8,7 +8,7 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras.utils import CustomObjectScope
 
 from core.generator import Generator
-from core.utils_nn import parse_file, get_model_path
+from core.utils import parse_file, get_model_path
 from functools import partial
 
 model_name = 'resnet'

@@ -7,7 +7,7 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras import backend as K
 
 from core.generator import AttacksGenerator
-from core.utils_nn import parse_file, parse_pred_file, get_model_path, get_folder_name
+from core.utils import parse_file, parse_pred_file, get_model_path, get_folder_name
 
 from tensorflow.keras.utils import CustomObjectScope
 from functools import partial

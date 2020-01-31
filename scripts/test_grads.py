@@ -2,7 +2,7 @@ import tensorflow as tf
 from tensorflow.keras.models import load_model
 import numpy
 import os
-from utils_nn import get_model_path_acc
+from utils import get_model_path_acc
 
 from generator import ConfigurationGenerator
 

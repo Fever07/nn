@@ -1,7 +1,7 @@
 import os
 import sys
 from sklearn.metrics import roc_curve, auc
-from core.utils_nn import parse_file, parse_pred_file
+from core.utils import parse_file, parse_pred_file
 from matplotlib import pyplot as plt
 import numpy
 
