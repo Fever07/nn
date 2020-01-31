@@ -14,19 +14,10 @@ from tensorflow import set_random_seed
 from core.utils import parse_file, load_gray_image, load_color_image, get_model_path, get_folder_name
 from core.generator import ConfigurationGenerator, Generator
 from core.pgd_attack import PGD_attack as pgd
+from core.constants import TRAIN_FILE, TEST_FILE, PRED_TRAIN_FILE, PRED_TEST_FILE
 import pickle
 from functools import partial
 from tqdm import tqdm
-
-model_name = 'inceptionv3'
-input_shape = [256, 256, 1]
-n_classes = 2
-batch_size = 20
-colored = input_shape[-1] == 3
-train_file = 'train.txt'
-test_file = 'test.txt'
-pred_train_file = 'pred_train.pkl'
-pred_test_file = 'pred_test.pkl'
 
 attacks_folder = '/media/data10T_1/datasets/Voynov/__attacks__'
 def save_attacks(absp, a_imgs, i):
@@ -48,16 +39,17 @@ def save_attacks(absp, a_imgs, i):
     file.close()
 
 
-def attack(absp):
+def attack(absp, model_name, n_classes, colored, batch_size, **kwargs):
 
     seed(1337)
     set_random_seed(1337)
     rng = numpy.random.RandomState(1337)
 
-    abs_trainp = os.path.join(absp, train_file)
-    abs_testp = os.path.join(absp, test_file)
-    abs_pred_trainp = os.path.join(absp, model_name, pred_train_file)
-    abs_pred_testp = os.path.join(absp, model_name, pred_test_file)
+    abs_trainp = os.path.join(absp, TRAIN_FILE)
+    abs_testp = os.path.join(absp, TEST_FILE)
+    abs_pred_trainp = os.path.join(absp, model_name, PRED_TRAIN_FILE)
+    abs_pred_testp = os.path.join(absp, model_name, PRED_TEST_FILE)
+    input_shape = [256, 256, 3 if colored else 1]
 
     K.clear_session()
     model_path = get_model_path(absp, model_name=model_name)
@@ -133,18 +125,11 @@ def attack(absp):
             
 
 if __name__ == '__main__':
-    os.environ['CUDA_VISIBLE_DEVICES'] = '1'
-    if len(sys.argv) == 1:
-        print('Please provide path to folder')
-        exit()
-        
-    path_to_folder = sys.argv[1]
-    attack(path_to_folder)
+    args = parse_args(description='PGD attacks')
 
-    # f = '../__histology_camelyon_{}'
-    # ns = [500, 1000, 2000, 5000, 10000, 20000, 50000, 100000]
-    # for n in ns:
-    #     path_to_folder = f.format(n)
-    #     print(path_to_folder)
-    #     attack(path_to_folder)
+    if 'use_gpu' in args:
+        os.environ['CUDA_VISIBLE_DEVICES'] = args['use_gpu']
+        args.pop('use_gpu')
+
+    attack_lbfgs(**args)
 
