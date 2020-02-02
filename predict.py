@@ -22,13 +22,10 @@ def predict_generator(model_name, model_path, generator, labels, abs_pred_p):
     else:
         model = load_model(model_path)
 
-    sess = tf.Session()
-    sess.run(tf.global_variables_initializer())
-
-    probs = model.predict_generator(generator,
-                                    workers=8,
-                                    use_multiprocessing=True,
-                                    verbose=1)
+    probs = model.predict(generator,
+                            workers=8,
+                            use_multiprocessing=True,
+                            verbose=1)
 
     # Calc accuracy
     pred_labels = numpy.argmax(probs, axis=1)

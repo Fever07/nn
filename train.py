@@ -19,12 +19,9 @@ def init_and_train_model(absp, model_name, n_classes, colored, batch_size, **kwa
 
     lr = 0.001
     loss = 'binary_crossentropy' if n_classes is 2 else 'categorical_crossentropy'
-    model.compile(optimizer=tf.train.AdamOptimizer(lr),
+    model.compile(optimizer=tf.keras.optimizers.Adam(lr),
                   loss=loss,
                   metrics=['accuracy'])
-
-    sess = tf.Session()
-    sess.run(tf.global_variables_initializer())
 
     # Define data generators
     abs_trainp = os.path.join(absp, TRAIN_FILE)
