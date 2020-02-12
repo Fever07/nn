@@ -83,7 +83,7 @@ def attack_deepfool(absp, model_name, n_classes, colored, batch_size, **kwargs):
     diff_linfnorms = np.zeros(shape=[generator.total], dtype=np.float32)
     grads = [tf.gradients(model.output[:, i], model.input)[0] for i in range(n_classes)]
     grads = tf.stack(grads)
-    grads = tf.reshape(grads, [batch_size, n_classes, *input_shape])
+    grads = tf.transpose(grads, perm=[1, 0, 2, 3, 4])
     for i in tqdm(range(len(generator))):
         imgs, categorical_labels = generator[i]
         labels = np.argmax(categorical_labels, axis=1)
