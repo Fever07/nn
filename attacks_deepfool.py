@@ -30,6 +30,9 @@ def calc_linfnorm(v):
     n = np.max(np.abs(v), axis=(1, 2, 3))
     return n
 
+def softmax(v):
+    return np.exp(v) / np.sum(np.exp(v))
+
 def attack_deepfool(absp, model_name, n_classes, colored, batch_size, **kwargs):
 
     seed(1337)
@@ -51,6 +54,11 @@ def attack_deepfool(absp, model_name, n_classes, colored, batch_size, **kwargs):
             model = load_model(model_path)
     else:
         model = load_model(model_path)
+
+    model.layers[-1].activation = tf.keras.activations.linear
+    model.save('__temp_model__')
+    model = load_model('__temp_model__')
+    os.remove('__temp_model__')
 
     generator = Generator(
         abs_testp,
@@ -97,7 +105,7 @@ def attack_deepfool(absp, model_name, n_classes, colored, batch_size, **kwargs):
         diff_linfnorms_batch = calc_linfnorm(imgs - a_imgs)
         diff_linfnorms[i * batch_size: (i + 1) * batch_size] = diff_linfnorms_batch
 
-        a_probs_batch = model.predict(a_imgs)
+        a_probs_batch = np.array([softmax(p) for p in model.predict(a_imgs)])
         a_probs[i * batch_size: (i + 1) * batch_size] = a_probs_batch
 
     fpath = abs_a_file_format.format(max_iter)
