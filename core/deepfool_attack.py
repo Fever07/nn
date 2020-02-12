@@ -23,8 +23,8 @@ def deepfool_attack(sess, x, predictions, grads, imgs, n_classes,
     adv_x = imgs
     w = np.zeros(imgs.shape[1:])
     r_tot = np.zeros(imgs.shape)
-    lower_bounds = imgs - clip_max
-    upper_bounds = imgs - clip_min
+    lower_bounds = clip_min - imgs
+    upper_bounds = clip_max - imgs
     
     iteration = 0
     while (np.any(current == original) and iteration < max_iter):
@@ -44,12 +44,61 @@ def deepfool_attack(sess, x, predictions, grads, imgs, n_classes,
                     w = w_k
             r_i = pert * w / np.linalg.norm(w)
             r_tot[idx, ...] = r_tot[idx, ...] + r_i
-            r_tot = np.clip(r_tot, lower_bounds, upper_bounds)
+            # r_tot = np.clip(r_tot, lower_bounds, upper_bounds)
             # print('Iteration: {}, idx: {}, norm: {}'.format(iteration, idx, np.max(np.abs(r_tot[idx]))))
 
-        adv_x = np.clip(imgs - r_tot, clip_min, clip_max)
+        adv_x = np.clip(imgs + r_tot, clip_min, clip_max)
         current = np.argmax(sess.run(predictions, feed_dict={x: adv_x}), axis=1)
         iteration = iteration + 1
 
-    adv_x = np.clip(imgs - (1 + overshoot) * r_tot, clip_min, clip_max)
+    adv_x = np.clip(imgs + (1 + overshoot) * r_tot, clip_min, clip_max)
     return adv_x
+
+
+if __name__ == '__main__':
+    import tensorflow as tf
+
+    np.random.seed(42)
+    tf.set_random_seed(42)
+
+    tf.keras.backend.clear_session()
+    sess = tf.keras.backend.get_session()
+
+    inp = tf.keras.layers.Input(shape=[20])
+    out = tf.keras.layers.Dense(2)(inp)
+
+    model = tf.keras.models.Model(inputs=[inp], outputs=[out])
+    model.compile(tf.train.AdamOptimizer(0.001), loss='mse')
+
+    X = np.random.uniform(0, 1, [200, 20])
+    W = np.random.uniform(0, 1, [20, 2])
+    y = X @ W
+    X_train = X[:160]
+    X_test = X[160:]
+    y_train = y[:160]
+    y_test = y[160:]
+
+    model.fit(X_train, y_train, epochs=100)
+    model.evaluate(X_test, y_test)
+    y_pred = model.predict(X_test)
+
+    grads = [tf.gradients(model.output[:, i], model.input)[0] for i in range(2)]
+    grads = tf.stack(grads)
+    grads = tf.transpose(grads, perm=[1, 0, 2])
+
+    W = sess.run(model.layers[-1].weights[0].value())
+    b = sess.run(model.layers[-1].weights[1].value())
+
+    a_X = deepfool_attack(sess=sess,
+                            x=model.input,
+                            predictions=model.output,
+                            grads=grads,
+                            imgs=X_test,
+                            n_classes=2,
+                            overshoot=0.01,
+                            max_iter=1,
+                            clip_min=-np.inf,
+                            clip_max=np.inf)
+
+    a_y = model.predict(a_X)
+    print(a_X.min(), a_X.max())
