@@ -13,15 +13,12 @@ from tensorflow import set_random_seed
 
 from core.utils import parse_file, load_gray_image, load_color_image, get_model_path, get_folder_name
 from core.generator import ConfigurationGenerator, Generator
-from core.pgd_attack import PGD_attack as pgd
+from core.deepfool_attack import deepfool_attack
 from core.constants import TRAIN_FILE, TEST_FILE, PRED_TRAIN_FILE, PRED_TEST_FILE
 from core.argparser import parse_args
 import pickle
 from functools import partial
 from tqdm import tqdm
-
-from cleverhans.attacks_tf import deepfool_batch
-from cleverhans import model as  clm
 
 def calc_l2norm(v):
     n = np.linalg.norm(v, axis=1)
@@ -55,8 +52,6 @@ def attack_deepfool(absp, model_name, n_classes, colored, batch_size, **kwargs):
     else:
         model = load_model(model_path)
 
-    
-
     generator = Generator(
         abs_testp,
         batch_size=batch_size,
@@ -64,20 +59,16 @@ def attack_deepfool(absp, model_name, n_classes, colored, batch_size, **kwargs):
         num_classes=n_classes
     )
 
-    a_file_format = 'a_test_DF_probs_conf_{0}_lr_{1}_c_{2}_max_iter_{3}.pkl'
+    a_file_format = 'a_test_DF_probs_max_iter_{}.pkl'
     abs_a_file_format = os.path.join(absp, model_name, a_file_format)
-    a_file_l2norm_format = 'a_test_DF_l2norms_conf_{0}_lr_{1}_c_{2}_max_iter_{3}.pkl'
+    a_file_l2norm_format = 'a_test_DF_l2norms_max_iter_{}.pkl'
     abs_a_file_l2norm_format = os.path.join(absp, model_name, a_file_l2norm_format)
-    a_file_linfnorm_format = 'a_test_DF_linfnorms_conf_{0}_lr_{1}_c_{2}_max_iter_{3}.pkl'
+    a_file_linfnorm_format = 'a_test_DF_linfnorms_max_iter_{}.pkl'
     abs_a_file_linfnorm_format = os.path.join(absp, model_name, a_file_linfnorm_format)
 
     print('Attacking of %s' % model_name)
 
-    confidence = 0
-    lr = 0.01
-    c = 1
     max_iter = 50
-    wrapped_model = clm.CallableModelWrapper(model, 'logits')
 
     a_probs = np.zeros(shape=[generator.total, n_classes], dtype=np.float32)
     diff_l2norms = np.zeros(shape=[generator.total], dtype=np.float32)
@@ -89,19 +80,16 @@ def attack_deepfool(absp, model_name, n_classes, colored, batch_size, **kwargs):
         imgs, categorical_labels = generator[i]
         labels = np.argmax(categorical_labels, axis=1)
 
-        a_imgs = deepfool_batch(sess=sess,
+        a_imgs = deepfool_attack(sess=sess,
                                 x=model.input,
-                                pred=model.output,
-                                logits=model.layers[-1].input,
+                                predictions=model.output,
                                 grads=grads,
-                                X=imgs,
-                                classes=labels,
-                                nb_candidate=n_classes,
+                                imgs=imgs,
+                                n_classes=n_classes,
                                 overshoot=0.02,
                                 max_iter=50,
                                 clip_min=0.0,
-                                clip_max=1.0,
-                                nb_classes=n_classes)
+                                clip_max=1.0)
 
         diff_l2norms_batch = calc_l2norm(imgs - a_imgs)
         diff_l2norms[i * batch_size: (i + 1) * batch_size] = diff_l2norms_batch
@@ -112,17 +100,17 @@ def attack_deepfool(absp, model_name, n_classes, colored, batch_size, **kwargs):
         a_probs_batch = model.predict(a_imgs)
         a_probs[i * batch_size: (i + 1) * batch_size] = a_probs_batch
 
-    fpath = abs_a_file_format.format(confidence, lr, c, max_iter)
+    fpath = abs_a_file_format.format(max_iter)
     file = open(fpath, 'wb')
     pickle.dump(a_probs, file)
     file.close()
 
-    fpath = abs_a_file_l2norm_format.format(confidence, lr, c, max_iter)
+    fpath = abs_a_file_l2norm_format.format(max_iter)
     file = open(fpath, 'wb')
     pickle.dump(diff_l2norms, file)
     file.close()
     
-    fpath = abs_a_file_linfnorm_format.format(confidence, lr, c, max_iter)
+    fpath = abs_a_file_linfnorm_format.format(max_iter)
     file = open(fpath, 'wb')
     pickle.dump(diff_linfnorms, file)
     file.close()
