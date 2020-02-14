@@ -5,7 +5,7 @@ import pickle
 from parse import parse
 import os
 
-from core.utils import parse_file, parse_pred_file, load_gray_image, load_color_image
+from core.utils import parse_file, parse_pred_file, load_gray_image, load_color_image, detect_dataset_configuration
 
 class AbstractGenerator(keras.utils.Sequence):
     def __init__(self, path, colored, batch_size=32, shape=1):
@@ -28,6 +28,7 @@ class Generator(AbstractGenerator):
     def __init__(self, path, colored=False, batch_size=32, num_classes=2, total=None):
         AbstractGenerator.__init__(self, path, colored, batch_size)
         self.paths, self.labels = parse_file(self.path)
+        self.colored, self.num_classes, self.batch_size = detect_dataset_configuration(self.paths, self.labels)
         if total is not None:
             self.total = total
         else:
@@ -53,8 +54,8 @@ class ConfigurationGenerator(AbstractGenerator):
     def __init__(self, orig_path, pred_path, colored=False, batch_size=32, total=None):
         AbstractGenerator.__init__(self, pred_path, colored, batch_size)
         self.paths, self.labels = parse_file(orig_path)
+        self.colored, self.num_classes, self.batch_size = detect_dataset_configuration(self.paths, self.labels)
         self.probs = parse_pred_file(pred_path)
-        self.num_classes = len(self.probs[0])
         if total is not None:
             self.total = total
         else:

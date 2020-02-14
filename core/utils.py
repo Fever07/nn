@@ -76,3 +76,28 @@ def get_folder_name(absp):
     else:
         folder_name = absp.split('/')[-1]
     return folder_name
+
+def detect_dataset_configuration(paths, labels):
+    # detect colored
+    imgp = paths[0]
+    try:
+        img = load_color_image(imgp)
+        colored = True
+    except IndexError:
+        colored = False
+    
+    # detect n_classes
+    classes = set(labels)
+    n_classes = len(classes)
+
+    # detect batch_size
+    preferred_sizes = [16, 20, 25]
+    N = len(paths)
+    for size in preferred_sizes:
+        if N % size == 0:
+            batch_size = size
+            break
+
+    print(colored, n_classes, batch_size)
+    return colored, n_classes, batch_size
+    
