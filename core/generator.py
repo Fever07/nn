@@ -12,7 +12,7 @@ class AbstractGenerator(keras.utils.Sequence):
         self.path = path
         self.paths, self.labels = parse_file(self.path)
         self.colored, self.num_classes, self.batch_size = detect_dataset_configuration(self.paths, self.labels)
-        self.load_image = load_color_image if colored else load_gray_image
+        self.load_image = load_color_image if self.colored else load_gray_image
 
     def __data_generation(self, start_batch):
         pass

@@ -98,6 +98,5 @@ def detect_dataset_configuration(paths, labels):
             batch_size = size
             break
 
-    print(colored, n_classes, batch_size)
     return colored, n_classes, batch_size
     
