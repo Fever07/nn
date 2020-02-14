@@ -10,8 +10,8 @@ from core.utils import parse_file, parse_pred_file, load_gray_image, load_color_
 class AbstractGenerator(keras.utils.Sequence):
     def __init__(self, path, colored, batch_size=32, shape=1):
         self.path = path
-        self.batch_size = batch_size
-        self.colored = colored
+        self.paths, self.labels = parse_file(self.path)
+        self.colored, self.num_classes, self.batch_size = detect_dataset_configuration(self.paths, self.labels)
         self.load_image = load_color_image if colored else load_gray_image
 
     def __data_generation(self, start_batch):
@@ -27,13 +27,10 @@ class AbstractGenerator(keras.utils.Sequence):
 class Generator(AbstractGenerator):
     def __init__(self, path, colored=False, batch_size=32, num_classes=2, total=None):
         AbstractGenerator.__init__(self, path, colored, batch_size)
-        self.paths, self.labels = parse_file(self.path)
-        self.colored, self.num_classes, self.batch_size = detect_dataset_configuration(self.paths, self.labels)
         if total is not None:
             self.total = total
         else:
             self.total = len(self.paths)
-        self.num_classes = num_classes
 
     def __data_generation(self, start_batch):
         end_batch = min(start_batch + self.batch_size, self.total)
@@ -52,9 +49,7 @@ class Generator(AbstractGenerator):
 
 class ConfigurationGenerator(AbstractGenerator):
     def __init__(self, orig_path, pred_path, colored=False, batch_size=32, total=None):
-        AbstractGenerator.__init__(self, pred_path, colored, batch_size)
-        self.paths, self.labels = parse_file(orig_path)
-        self.colored, self.num_classes, self.batch_size = detect_dataset_configuration(self.paths, self.labels)
+        AbstractGenerator.__init__(self, orig_path, colored, batch_size)
         self.probs = parse_pred_file(pred_path)
         if total is not None:
             self.total = total
