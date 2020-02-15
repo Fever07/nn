@@ -78,6 +78,8 @@ def attack_deepfool(absp, model_name, n_classes, colored, batch_size, **kwargs):
 
     max_iter = 50
 
+    n_classes = generator.num_classes
+    batch_size = generator.batch_size
     a_probs = np.zeros(shape=[generator.total, n_classes], dtype=np.float32)
     diff_l2norms = np.zeros(shape=[generator.total], dtype=np.float32)
     diff_linfnorms = np.zeros(shape=[generator.total], dtype=np.float32)
